@@ -10,6 +10,8 @@ APK由WhaleDo独立发布证书签名，SHA256指纹：1e37e151927c9974177f4ba62
 
 ## HarmonyOS
 
+新旧包差异、签名核验及覆盖升级注意事项集中见[签名更新说明](SIGNING.md)。
+
 WhaleDo-Harmony-0.4.0-api24-release-signed.hap是**发布签名核验包**，API24，包名com.course.whaletodomobile，versionCode40000。实际使用release模式构建，debug=false；华为发布证书和普通发布Profile均已生效，官方工具对HAP及内嵌Profile验签通过。证书SHA256指纹：31788e67b9bcdcae993ff5947054780a22ac3b90ec87eff6aeee34c48300f051。
 
 本包供课程方下载、检查release构建信息、文件完整性和发布签名。Profile类型release、分发类型app_gallery，无设备标识；**普通发布签名不代表任意鸿蒙真机均可侧载安装**，此项目未上架应用市场。若课程方需要在自己的真机安装，应登记该设备并另配“指定设备发布Profile”，或使用自己的开发者调试签名。不能用已有调试Profile的设备列表推定普通发布包可安装。请勿为换签名而直接卸载已有重要记录。

@@ -2,7 +2,7 @@
 
 今天，慢慢办好。独立移动应用课程项目，包含 HarmonyOS、Android、课程 API 和官网下载站。
 
-[官网下载](https://whaletodo.top) · [Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0-signing.1) · [安装说明](docs/INSTALL.md) · [构建说明](docs/BUILD.md) · [验证范围](docs/VERIFICATION.md)
+[官网下载](https://whaletodo.top) · [Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0-signing.1) · [签名更新](docs/SIGNING.md) · [安装说明](docs/INSTALL.md) · [构建说明](docs/BUILD.md) · [验证范围](docs/VERIFICATION.md)
 
 <img src="website/dist/assets/whaledo_mascot.png" alt="鲸办主题" width="220">
 

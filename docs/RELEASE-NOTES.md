@@ -1,4 +1,12 @@
-# 鲸办 WhaleDo 0.4.0 · 课程预览版
+# 鲸办 WhaleDo · 更新记录
+
+## 0.4.0-signing.1：鸿蒙发布签名补充（2026-11-08）
+
+已申请生效的华为发布证书及普通发布Profile，重新构建release HAP（debug=false）并完成HAP/Profile双重官方验签。包含已批准的READ_WHOLE_CALENDAR；课程发布变体排除尚未获准的PUBLISH_AGENT_REMINDER。应用功能版本仍0.4.0，Android APK不变，旧v0.4.0标签保留。
+
+当前下载请使用[签名补充Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0-signing.1)。普通发布Profile分发类型为app_gallery，供课程方下载验签，不保证任意真机侧载；课程设备安装应另配指定设备发布Profile或自行调试签名。签名差异、覆盖升级、源码编译及核验方法见[签名更新说明](SIGNING.md)。
+
+## 0.4.0：首次课程预览（历史）
 
 首次独立公开发布鸿蒙与Android课程源码、Android正式签名APK和鸿蒙API24未签名调试HAP。官网提供双端下载入口。图片、头像和OCR选图优先使用系统照片选择器，旧设备使用图库入口；音频仍从文件选择器导入。
 
