@@ -2,7 +2,7 @@
 
 今天，慢慢办好。独立移动应用课程项目，包含 HarmonyOS、Android、课程 API 和官网下载站。
 
-[官网下载](https://whaletodo.top) · [Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0) · [安装说明](docs/INSTALL.md) · [构建说明](docs/BUILD.md) · [验证范围](docs/VERIFICATION.md)
+[官网下载](https://whaletodo.top) · [Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0-signing.1) · [安装说明](docs/INSTALL.md) · [构建说明](docs/BUILD.md) · [验证范围](docs/VERIFICATION.md)
 
 <img src="website/dist/assets/whaledo_mascot.png" alt="鲸办主题" width="220">
 
@@ -35,6 +35,6 @@ Android复用14个同源纯业务模块。公开目录保留运行代码与构�
 
 仓库不包含实际账号、邮箱验证码、访问令牌、模型/SMTP/SSH凭据、服务器地址、数据库、签名私钥或设备Profile。域名是公开业务入口。测试文件中的示例账号/口令只用于本地合成联调。
 
-Android发布包使用独立RSA4096发布证书并保留课程测试签名的升级证明；正式包关闭debuggable和WebView调试。私有密钥不在仓库中。HarmonyOS下载项是未签名调试HAP，不能作为普通真机通用安装包。
+Android发布包使用独立RSA4096发布证书并保留课程测试签名的升级证明；正式包关闭debuggable和WebView调试。HarmonyOS提供真正的release构建和华为发布签名HAP，供课程方下载验签，普通发布Profile的分发类型为app_gallery，不能作为任意真机通用侧载包。课程发布变体排除尚未获批的代理提醒权限，包含已批准的日历ACL。签名私钥不公开，签名包内嵌必要的公开证书和普通发布Profile签名元数据。
 
 本项目源码公开用于课程展示；未另外授予本项目原创代码与图片的通用开源许可。第三方依赖按其原许可使用，详见[第三方声明](docs/THIRD_PARTY.md)。

@@ -2,7 +2,7 @@
 
 ## Android
 
-从[Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0)下载WhaleDo-Android-0.4.0.apk。支持Android8.0/API26及以上，target36，versionCode40001。按系统提示允许所用下载应用安装APK，再打开文件。
+从[Release](https://github.com/bottledkzk/WhaleDo/releases/tag/v0.4.0-signing.1)下载WhaleDo-Android-0.4.0.apk。支持Android8.0/API26及以上，target36，versionCode40001。按系统提示允许所用下载应用安装APK，再打开文件。
 
 APK由WhaleDo独立发布证书签名，SHA256指纹：1e37e151927c9974177f4ba628da3ff1e05d313d033ac8ecfa59cf53464a7e5d。使用Android签名轮换证明，API28+使用新证书，API26/27保留兼容签名；发布包关闭debuggable。已在API36模拟器和小米API36手机覆盖旧课程测试包，不卸载、不清数据。
 
@@ -10,13 +10,15 @@ APK由WhaleDo独立发布证书签名，SHA256指纹：1e37e151927c9974177f4ba62
 
 ## HarmonyOS
 
-WhaleDo-Harmony-0.4.0-api24-unsigned.hap是**未签名调试包**，API24，包名com.course.whaletodomobile，versionCode40000。可用于DevEco Studio模拟器调试；不是所有鸿蒙真机都能直接打开安装的商用发行包。
+WhaleDo-Harmony-0.4.0-api24-release-signed.hap是**发布签名核验包**，API24，包名com.course.whaletodomobile，versionCode40000。实际使用release模式构建，debug=false；华为发布证书和普通发布Profile均已生效，官方工具对HAP及内嵌Profile验签通过。证书SHA256指纹：31788e67b9bcdcae993ff5947054780a22ac3b90ec87eff6aeee34c48300f051。
 
-真机需要开发者自己的调试证书、设备登记及对应Profile，使用DevEco Studio的调试签名流程构建/签名，再由官方调试工具安装。仓库与Release不提供私钥、设备标识或设备绑定Profile。
+本包供课程方下载、检查release构建信息、文件完整性和发布签名。Profile类型release、分发类型app_gallery，无设备标识；**普通发布签名不代表任意鸿蒙真机均可侧载安装**，此项目未上架应用市场。若课程方需要在自己的真机安装，应登记该设备并另配“指定设备发布Profile”，或使用自己的开发者调试签名。不能用已有调试Profile的设备列表推定普通发布包可安装。请勿为换签名而直接卸载已有重要记录。
 
-应用声明的READ_WHOLE_CALENDAR属于受限权限。批量日历调试必须具备相应ACL并添加到Profile；课程已获批准不代表其他开发者账户自动获得。代理提醒尚未获准，本项目按课程范围暂停补件；普通通知不等同于后台代理提醒已可用。
+READ_WHOLE_CALENDAR已经加入本次发布Profile，仅按已批准的课程场景使用；不代表其他开发者账户自动获得。代理提醒尚未获准，本次课程发布变体明确排除PUBLISH_AGENT_REMINDER，不申请补件；相关后台提醒不计为可用能力。原开发源码仍保留提醒适配，发布生成步骤见BUILD.md。
 
-保持既有正式包名并覆盖安装，避免卸载导致记录丢失。构建和安装步骤见BUILD.md，华为签名/Profile流程以[官方说明](https://developer.huawei.com/consumer/cn/doc/app/agc-help-add-releaseprofile-0000001914714796)为准。
+旧v0.4.0 Release保留未签名调试HAP供历史模拟器复现。仓库及下载文件不含签名私钥、口令或设备绑定Profile；签名包必然内嵌公开证书及普通发布Profile的签名元数据。新补充标签v0.4.0-signing.1未改变应用功能版本0.4.0。
+
+官方流程：[发布Profile](https://developer.huawei.com/consumer/cn/doc/App/agc-help-release-profile-0000002248341090/)、[指定设备发布Profile](https://developer.huawei.com/consumer/cn/doc/App/agc-help-internaltest-profile-0000002283260129/)。
 
 ## 文件校验
 

@@ -1,5 +1,6 @@
 param(
-    [string]$DevEcoHome = $env:DEVECO_HOME
+    [string]$DevEcoHome = $env:DEVECO_HOME,
+    [ValidateSet('debug','release')][string]$BuildMode = 'debug'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,7 +26,7 @@ try {
     $env:HVIGOR_USER_HOME = Join-Path (Split-Path $projectRoot -Parent) '.hvigor-home'
     $env:npm_config_cache = Join-Path (Split-Path $projectRoot -Parent) '.npm-cache'
     $env:PATH = "$nodeHome;$(Join-Path $DevEcoHome 'tools\ohpm\bin');$env:PATH"
-    & (Join-Path $nodeHome 'node.exe') $hvigorScript --mode module -p product=default -p module=entry@default -p buildMode=debug assembleHap --no-daemon
+    & (Join-Path $nodeHome 'node.exe') $hvigorScript --mode module -p product=default -p module=entry@default -p "buildMode=$BuildMode" assembleHap --no-daemon
     if ($LASTEXITCODE -ne 0) {
         throw "Hvigor failed with exit code $LASTEXITCODE"
     }

@@ -1,0 +1,32 @@
+{
+  "artifact": "WhaleDo-Harmony-0.4.0-api24-release-signed.hap",
+  "sha256": "bf4bdbae24a6d8f2aa7b1c514c04efb3ba37f8a277f587b82d8de6eb6d4f874e",
+  "bytes": 9075940,
+  "bundleName": "com.course.whaletodomobile",
+  "versionName": "0.4.0",
+  "versionCode": 40000,
+  "buildMode": "release",
+  "debug": false,
+  "api": 24,
+  "hapSignatureVerified": true,
+  "profileSignatureVerified": true,
+  "archiveIntegrityVerified": true,
+  "certificateMatchesProfile": true,
+  "certificateSha256": "31788e67b9bcdcae993ff5947054780a22ac3b90ec87eff6aeee34c48300f051",
+  "profileType": "release",
+  "distributionType": "app_gallery",
+  "profileExpiresUtc": "2029-11-08T13:42:26+00:00",
+  "permissions": [
+    "ohos.permission.INTERNET",
+    "ohos.permission.MICROPHONE",
+    "ohos.permission.READ_WHOLE_CALENDAR"
+  ],
+  "allowedAcls": [
+    "ohos.permission.READ_WHOLE_CALENDAR"
+  ],
+  "embeddedDeviceIdentifierCount": 0,
+  "universalPhysicalInstall": false,
+  "privateKeyIncluded": false,
+  "verificationTool": "Official DevEco Studio SDK hap-sign-tool.jar",
+  "verifiedAtUtc": "2026-11-08T13:59:35.008916+00:00"
+}
