@@ -1,0 +1,23 @@
+{
+  "name": "whaledo-course-api",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/mobile/main.ts",
+    "test": "node --test --test-concurrency=1 test/mobile-*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fastify": "5.12.7",
+    "nodemailer": "7.0.13"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.21",
+    "@types/nodemailer": "7.0.12",
+    "typescript": "5.9.3"
+  }
+}

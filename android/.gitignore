@@ -1,0 +1,12 @@
+.gradle/
+.local-build/
+**/build/
+.idea/
+node_modules/
+local.properties
+*.jks
+*.keystore
+# Download the pinned speech model with the course preparation script.
+app/src/main/assets/speech-model/
+# Controlled audio belongs to the separate device-test APK, never the app APK.
+app/src/androidTest/assets/asr_example_zh.wav

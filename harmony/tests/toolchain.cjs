@@ -1,0 +1,1 @@
+const path=require('node:path');for(const candidate of [process.env.TYPESCRIPT_PATH,path.resolve(__dirname,'../../android/node_modules/typescript'),'typescript'].filter(Boolean)){try{module.exports=require(candidate);return;}catch{}}throw Error('Run npm ci in android, or set TYPESCRIPT_PATH.');

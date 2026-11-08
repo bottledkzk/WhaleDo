@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "把待办、时间和行动放在一起"
+    },
+    {
+      "name": "calendar_read_reason",
+      "value": "读取未来30天日程，由您预览选择后导入待办；不修改系统日历"
+    },
+    {
+      "name": "microphone_capture_reason",
+      "value": "在您选择语音输入时录音，在设备上转写成待办草稿"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+import { mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { buildMobileApp } from './app.ts';
+import { MobileStore } from './store.ts';
+import { loadAiConfig, DeepSeekProvider } from './ai-provider.ts';
+import { MobileAi } from './ai-queue.ts';
+import { createMailRuntime } from './mail-provider.ts';
+import { MobileMail } from './mail.ts';
+import { MobileSharedLists } from './shared-lists.ts';
+import { MobileFeed } from './feed.ts';
+const database=process.env.MOBILE_DATABASE_FILE?resolve(process.env.MOBILE_DATABASE_FILE):fileURLToPath(new URL('../../data/mobile.sqlite3',import.meta.url));
+mkdirSync(dirname(database),{recursive:true});
+const port=Number(process.env.MOBILE_PORT??18080);
+if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid independent mobile port');
+const store=new MobileStore(database,Date.now,Number(process.env.MOBILE_MAX_ACCOUNTS??50));
+const aiConfig=loadAiConfig();
+const ai=aiConfig?new MobileAi(database,new DeepSeekProvider(aiConfig),aiConfig):undefined;
+let mailRuntime;try{mailRuntime=createMailRuntime(database);}catch{console.error('Course email is disabled because its private configuration is unavailable.');}
+const mail=new MobileMail(database,mailRuntime);
+const shared = process.env.MOBILE_ENABLE_SHARED_LISTS === '1' ? new MobileSharedLists(database) : undefined;
+const feed=new MobileFeed(database);
+const app=buildMobileApp(store,ai,mail,shared,feed);
+for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{void app.close().then(()=>{feed.close();store.close();process.exit(0);});});
+await app.listen({host:'127.0.0.1',port});
+console.log('WhaleToDo mobile course API ready on loopback; persistent SQLite; no production project credentials inherited.');

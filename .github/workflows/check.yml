@@ -1,0 +1,25 @@
+name: Course source checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            android/package-lock.json
+            server/package-lock.json
+      - run: npm ci --prefix android --ignore-scripts
+      - run: npm ci --prefix server --ignore-scripts
+      - run: node scripts/check-public.cjs
+      - run: npm test --prefix android
+      - run: node --test harmony/tests/*.test.cjs
+      - run: npm test --prefix server
+      - run: npm run typecheck --prefix server

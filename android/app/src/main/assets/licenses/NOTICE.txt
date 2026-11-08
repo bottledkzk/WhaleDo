@@ -1,0 +1,15 @@
+WhaleDo Android 0.4.0 — third-party components
+
+Vosk Android API 0.3.75 and vosk-model-small-cn-0.22: Apache-2.0.
+https://github.com/alphacep/vosk-api
+https://alphacephei.com/vosk/models
+Native recognition components include Kaldi and OpenFST (Apache-2.0) and OpenBLAS (BSD).
+JNA 5.18.1 is used under Apache-2.0; its libffi component uses the included MIT license.
+AndroidX WebKit/Core and Android transitive support libraries use Apache-2.0.
+Kotlin standard libraries use Apache-2.0.
+Google ML Kit Chinese text recognition 16.0.1 and Google Play services components are distributed under their vendor terms:
+https://developers.google.com/ml-kit/terms
+https://developers.google.com/terms
+Input images and recognized text are processed on-device by ML Kit. Its SDK may send performance and usage metrics to Google and contact Google for updates/compatibility information.
+
+These notices concern third-party components, not a license grant for WhaleDo's original course code or generated artwork.

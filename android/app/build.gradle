@@ -1,0 +1,32 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.course.whaledo'
+    compileSdk 36
+    defaultConfig { applicationId 'com.course.whaledo'; minSdk 26; targetSdk 36; versionCode 40001; versionName '0.4.0'; testInstrumentationRunner 'com.course.whaledo.CourseUiInstrumentation'; manifestPlaceholders = [courseLabel: '鲸办 WhaleDo'] }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    signingConfigs {
+        courseRelease {
+            if (System.getenv('WHALEDO_STORE_FILE')) {
+                storeFile file(System.getenv('WHALEDO_STORE_FILE'))
+                storePassword System.getenv('WHALEDO_STORE_PASSWORD')
+                keyAlias System.getenv('WHALEDO_KEY_ALIAS')
+                keyPassword System.getenv('WHALEDO_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; if (System.getenv('WHALEDO_STORE_FILE')) { signingConfig signingConfigs.courseRelease } }
+        verification { initWith debug; applicationIdSuffix '.verification'; matchingFallbacks = ['debug']; manifestPlaceholders = [courseLabel: '鲸办验证'] }
+    }
+    testBuildType 'verification'
+    androidResources { noCompress 'fst','mdl','int','csl' }
+    packaging { jniLibs { useLegacyPackaging = false } }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.14.0'
+    implementation 'androidx.core:core:1.16.0'
+    implementation 'com.google.mlkit:text-recognition-chinese:16.0.1'
+    implementation 'com.alphacephei:vosk-android:0.3.75@aar'
+    implementation 'net.java.dev.jna:jna:5.18.1@aar'
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:2.2.21')
+}

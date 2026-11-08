@@ -1,0 +1,63 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const ts=require('./toolchain.cjs');
+require.extensions['.ets']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS},fileName:file.replace(/\.ets$/,'.ts')}).outputText,file);
+const M=require('../entry/src/main/ets/model/MobileModel.ets');
+const now=new Date(2026,10,2,8).getTime();let checks=0;
+function test(name,fn){fn();checks++;console.log('PASS '+name);}
+function task(id,minutes=60){const t=new M.MobileTask();t.id=id;t.title=id;t.minutes=minutes;t.deadline=M.addDays(now,1);t.createdAt=now;return t;}
+test('quick capture stays an unscheduled inbox item until details are supplied',()=>{const t=task('inbox',0);t.deadline=0;const d=M.upsertTask(new M.MobileData(),t,0,now),r=M.arrange(d,now);assert.equal(d.tasks.length,1);assert.equal(r.skipped,1);assert.equal(r.data.blocks.length,0);});
+test('automatic arrangement conserves requested minutes inside WorkTime and deadline',()=>{let d=M.upsertTask(new M.MobileData(),task('read',105),0,now);let r=M.arrange(d,now);assert.equal(r.missing,0);assert.equal(r.data.blocks.reduce((s,b)=>s+(b.end-b.start)/60000,0),105);assert(r.data.blocks.every(b=>b.start>=now&&b.end<=d.tasks[0].deadline&&new Date(b.start).getHours()>=9));assert.equal(d.blocks.length,0);});
+test('manual reservation survives replan with its ID and times unchanged',()=>{const at=new Date(2026,10,2,10).getTime();let d=M.upsertTask(new M.MobileData(),task('manual'),at,now);const pin={...d.blocks[0]};d=M.upsertTask(d,task('auto',90),0,now);const r=M.arrange(d,now);assert.deepEqual(r.data.blocks.find(b=>b.id===pin.id),pin);for(const b of r.data.blocks.filter(b=>b.id!==pin.id))assert(!(b.start<pin.end&&pin.start<b.end));});
+test('conflicting and outside-WorkTime reservations reject without changing original data',()=>{const at=new Date(2026,10,2,10).getTime();const d=M.upsertTask(new M.MobileData(),task('one'),at,now),before=JSON.stringify(d);assert.throws(()=>M.upsertTask(d,task('two'),at,now));assert.throws(()=>M.upsertTask(d,task('early'),new Date(2026,10,2,8,30).getTime(),now));assert.equal(JSON.stringify(d),before);});
+test('editing a deadline cannot invalidate a protected reservation',()=>{const at=new Date(2026,10,2,10).getTime(),d=M.upsertTask(new M.MobileData(),task('one'),at,now);const edit={...d.tasks[0],deadline:at};assert.throws(()=>M.upsertTask(d,edit,0,now));assert.equal(d.tasks[0].deadline,M.addDays(now,1));});
+test('completion and reopening preserve identity and date-based activity',()=>{const d=M.upsertTask(new M.MobileData(),task('one'),0,now);const done=M.finishTask(d,'one',4,now);assert.equal(done.tasks[0].rating,4);assert.equal(done.tasks[0].completedAt,now);assert.equal(M.tasksOn(done,now).length,1);const reopened=M.finishTask(done,'one',5,now);assert.equal(reopened.tasks[0].id,'one');assert.equal(reopened.tasks[0].done,false);assert.equal(d.tasks[0].done,false);});
+test('capacity shortage is reported rather than extending WorkTime or crossing deadlines',()=>{let d=new M.MobileData();d.workStart=9*60;d.workEnd=10*60;d=M.upsertTask(d,task('large',180),0,now);const r=M.arrange(d,now);assert.equal(r.missing,120);assert.equal(r.data.blocks.reduce((s,b)=>s+(b.end-b.start)/60000,0),60);});
+test('invalid titles, numbers, duplicate IDs and corrupted stored structures are rejected',()=>{assert.throws(()=>M.upsertTask(new M.MobileData(),task('',-1),0,now));let d=M.upsertTask(new M.MobileData(),task('one'),0,now);const duplicate=M.clone(d);duplicate.tasks.push({...duplicate.tasks[0]});assert.throws(()=>M.checkData(duplicate));assert.throws(()=>M.checkData({...d,tasks:null}));assert.throws(()=>M.checkData({...d,theme:'unknown'}));assert.throws(()=>M.upsertTask(d,{...task('bad'),minutes:NaN},0,now));});
+test('strict local datetime rejects impossible dates and clock overflow',()=>{assert(Number.isNaN(M.parseTime('2026-02-30 10:00')));assert(Number.isNaN(M.parseTime('2026-11-02 25:00')));assert(Number.isNaN(M.parseClock('24:00')));assert.equal(M.parseClock('09:15'),555);assert.equal(M.localText(M.parseTime('2026-11-02 10:30')),'2026-11-02 10:30');});
+test('workday and weekly windows control both scheduling and reservations',()=>{
+  const saturday=new Date(2026,10,7,8).getTime();
+  const sunday=new Date(2026,10,8,8).getTime();
+  const data=new M.MobileData();
+  data.workWindows=[new M.WorkHours(9*60,10*60),new M.WorkHours(13*60,14*60)];
+  const plannedTask=task('weekend',30);
+  plannedTask.deadline=M.addDays(saturday,1);
+  const pending=M.upsertTask(data,plannedTask,0,saturday);
+  assert.equal(M.clock(M.arrange(pending,saturday).data.blocks[0].start),'13:00');
+  assert.throws(()=>M.upsertTask(data,plannedTask,new Date(2026,10,7,9).getTime(),saturday),/行动时间/);
+  assert.equal(M.upsertTask(data,plannedTask,new Date(2026,10,7,13).getTime(),saturday).blocks.length,1);
+  data.workWindows=Array.from({length:7},(_,day)=>new M.WorkHours((10+day)*60,(11+day)*60));
+  plannedTask.deadline=M.addDays(sunday,1);
+  const weekly=M.upsertTask(M.checkData(M.clone(data)),plannedTask,0,sunday);
+  assert.equal(M.clock(M.arrange(weekly,sunday).data.blocks[0].start),'10:00');
+  assert.throws(()=>M.checkData({...data,workWindows:[new M.WorkHours(700,700),new M.WorkHours(600,700)]}));
+  assert.equal(M.workHoursFor(new M.MobileData(),0).start,540);
+});
+test('a date override changes only its day in plans and manual reservations',()=>{
+  const data=new M.MobileData();data.workWindows=[new M.WorkHours(540,600),new M.WorkHours(600,660)];
+  data.workDates=[{day:'2026-11-02',start:780,end:840}];
+  const first=task('today',60),second=task('tomorrow',60);second.deadline=M.addDays(now,2);
+  const pending=M.upsertTask(M.upsertTask(data,first,0,now),second,0,now),result=M.arrange(pending,now);
+  assert.equal(result.missing,0);
+  assert(result.data.blocks.filter(b=>M.dateKey(b.start)==='2026-11-02').every(b=>M.clock(b.start)>='13:00'&&M.clock(b.end)<='14:00'));
+  assert.equal(M.clock(result.data.blocks.find(b=>M.dateKey(b.start)==='2026-11-03').start),'09:00');
+  assert.throws(()=>M.upsertTask(data,first,new Date(2026,10,2,9).getTime(),now),/行动时间/);
+  assert.equal(M.upsertTask(data,first,new Date(2026,10,2,13).getTime(),now).blocks.length,1);
+  assert.equal(M.workHoursOn(data,M.addDays(now,7)).start,540);
+  assert.equal(data.workStart,540);assert.equal(data.workWindows[0].start,540);
+  assert.throws(()=>M.checkData({...data,workDates:[...data.workDates,...data.workDates]}));
+  assert.throws(()=>M.checkData({...data,workDates:[{day:'2026-02-30',start:600,end:660}]}));
+});
+test('local appearance preferences accept old records and reject invalid avatar paths',()=>{
+  const old=new M.MobileData();assert.equal(M.checkData(old).tone,undefined);
+  const current={...old,tone:'whale',corners:'square',avatar:'whaletodo-avatar-guest-123456.jpg'};
+  assert.deepEqual(M.checkData(M.clone(current)),current);
+  for(const changes of [{tone:'unknown'},{corners:'unknown'},{avatar:'../private.json'}])assert.throws(()=>M.checkData({...old,...changes}));
+});
+test('diary byte-independent character limit protects saved structure',()=>{const d=new M.MobileData();d.diaries=[{day:'2026-11-02',text:'鲸'.repeat(800)}];assert.equal(M.checkData(d).diaries[0].text.length,800);assert.throws(()=>M.checkData({...d,diaries:[{day:'2026-11-02',text:'鲸'.repeat(801)}]}));});
+test('calendar has six Monday-aligned weeks across month/year boundaries',()=>{for(const stamp of [new Date(2026,11,31).getTime(),new Date(2024,1,29).getTime()]){const cells=M.monthCells(stamp);assert.equal(cells.length,42);assert.equal(new Date(cells[0]).getDay(),1);assert.equal(new Set(cells).size,42);assert(cells.some(c=>M.dateKey(c)===M.dateKey(stamp)));}});
+test('200 generated plans preserve work, deadlines and non-overlap without input mutation',()=>{for(let seed=0;seed<200;seed++){let d=new M.MobileData();d.workEnd=12*60+(seed%10)*30;for(let i=0;i<1+seed%8;i++)d=M.upsertTask(d,task('t-'+i,15*(1+(seed+i)%13)),0,now);const before=JSON.stringify(d),r=M.arrange(d,now);assert.equal(JSON.stringify(d),before);const blocks=r.data.blocks;assert.equal(new Set(blocks.map(b=>b.id)).size,blocks.length);for(let i=0;i<blocks.length;i++){const b=blocks[i];assert(b.start>=now&&b.end<=d.tasks.find(t=>t.id===b.taskId).deadline);for(let j=i+1;j<blocks.length;j++)assert(!(b.start<blocks[j].end&&blocks[j].start<b.end));}const total=d.tasks.reduce((s,t)=>s+t.minutes,0);assert.equal(blocks.reduce((s,b)=>s+(b.end-b.start)/60000,0)+r.missing,total);}});
+test('previous version files migrate their local revision without losing content',()=>{const d=M.upsertTask(new M.MobileData(),task('old'),0,now);delete d.revision;assert.equal(M.checkData(d).revision,0);assert.equal(d.tasks[0].id,'old');});
+test('plan proposal is read-only until accepted and retains protected reservations',()=>{const at=new Date(2026,10,2,10).getTime();let d=M.upsertTask(new M.MobileData(),task('fixed'),at,now);d=M.upsertTask(d,task('flexible',90),0,now);const before=JSON.stringify(d),p=M.proposePlan(d,now);assert.equal(JSON.stringify(d),before);assert(p.added>0);const applied=M.acceptPlan(d,p,now);assert.deepEqual(applied.blocks.find(b=>b.id===d.blocks[0].id),d.blocks[0]);assert(applied.blocks.length>d.blocks.length);assert.equal(JSON.stringify(M.undoPlan(applied,p.before,JSON.stringify(applied))),JSON.stringify(d));});
+test('changed tasks and expired proposals reject without overwriting current state',()=>{const d=M.upsertTask(new M.MobileData(),task('one'),0,now),p=M.proposePlan(d,now);const changed=M.clone(d);changed.tasks[0].title='Changed';assert.throws(()=>M.acceptPlan(changed,p,now));assert.throws(()=>M.acceptPlan(d,p,M.addDays(now,2)));assert.equal(d.blocks.length,0);});
+test('undo refuses intervening edits rather than reverting other work',()=>{const d=M.upsertTask(new M.MobileData(),task('one'),0,now),p=M.proposePlan(d,now),applied=M.acceptPlan(d,p,now),signature=JSON.stringify(applied);applied.diaries.push({day:'2026-11-02',text:'keep this'});assert.throws(()=>M.undoPlan(applied,p.before,signature));assert.equal(applied.diaries.length,1);});
+console.log(JSON.stringify({passed:true,checks,generatedScenarios:200,scope:'Production MobileModel and scheduler; no device, database, or model-service claims'}));
