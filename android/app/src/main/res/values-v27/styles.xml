@@ -1,0 +1,5 @@
+<resources>
+  <style name="WhaleTheme" parent="WhaleBaseTheme">
+    <item name="android:windowLightNavigationBar">true</item>
+  </style>
+</resources>

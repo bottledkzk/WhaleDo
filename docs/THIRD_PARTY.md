@@ -2,6 +2,7 @@
 
 | 组件 | 版本/用途 | 许可或条款 |
 | --- | --- | --- |
+| AndroidX Activity | 1.10.1，返回手势与生命周期 | Apache-2.0 |
 | AndroidX WebKit / Core | 1.14.0 / 1.16.0，WebView与系统支持 | Apache-2.0 |
 | Vosk Android API | 0.3.75，离线语音 | Apache-2.0 |
 | vosk-model-small-cn | 0.22，官方中文模型 | Apache-2.0，模型原包SHA256在assets/speech-model-source.json |

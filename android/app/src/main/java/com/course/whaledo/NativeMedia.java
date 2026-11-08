@@ -10,6 +10,8 @@ import android.os.Build;
 import android.provider.*;
 import android.util.Base64;
 import androidx.core.content.FileProvider;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.*;
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
@@ -48,9 +50,20 @@ final class NativeMedia {
             File directory=new File(a.getCacheDir(),"shared");directory.mkdirs();File output=new File(directory,"capture-"+UUID.randomUUID()+".jpg");capture=FileProvider.getUriForFile(a,a.getPackageName()+".files",output);
             intent=new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT,capture).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             intent.setClipData(ClipData.newRawUri("照片",capture));
-        }else intent=new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(command.equals("audioImport")?"audio/*":"image/*");
-        try{a.startActivityForResult(intent,701);}catch(ActivityNotFoundException e){pending=null;throw new IOException(command.equals("camera")?"当前设备暂无可用相机，可从相册选择":"当前设备无法打开文件选择器");}
+        }else if(command.equals("audioImport"))intent=new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("audio/*");
+        else intent=imageSelectionIntent(a);
+        try{a.startActivityForResult(intent,701);}catch(ActivityNotFoundException e){
+            if(!command.equals("camera")&&!command.equals("audioImport")&&!Intent.ACTION_PICK.equals(intent.getAction())){
+                try{a.startActivityForResult(galleryIntent(),701);return;}catch(ActivityNotFoundException ignored){}
+            }
+            pending=null;throw new IOException(command.equals("camera")?"当前设备暂无可用相机，可从相册选择":command.equals("audioImport")?"当前设备无法打开音频选择器":"当前设备暂无可用相册");
+        }
     }
+    static Intent imageSelectionIntent(Context context){
+        Intent intent=new ActivityResultContracts.PickVisualMedia().createIntent(context,new PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
+        return Intent.ACTION_OPEN_DOCUMENT.equals(intent.getAction())?galleryIntent():intent;
+    }
+    private static Intent galleryIntent(){return new Intent(Intent.ACTION_PICK).setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image/*").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);}
     void result(int request,int result,Intent data){
         if(request!=701&&request!=702)return;
         MainActivity.Reply reply=pending;String owner=pendingOwner;String mode=purpose;JSONObject p=options;Uri camera=capture;byte[] saved=pendingSave;

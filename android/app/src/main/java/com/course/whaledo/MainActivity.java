@@ -10,12 +10,14 @@ import android.view.*;
 import android.webkit.*;
 import android.widget.*;
 import androidx.webkit.*;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import org.json.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public final class MainActivity extends Activity {
+public final class MainActivity extends ComponentActivity {
     static final String ORIGIN="https://appassets.androidplatform.net";
     final ExecutorService io=Executors.newFixedThreadPool(3);
     NativeStore store;CourseApi api;NativeMedia media;WebView web;
@@ -70,7 +72,7 @@ public final class MainActivity extends Activity {
             }catch(Exception ignored){}
         });
         web.loadUrl(ORIGIN+"/assets/index.html");
-        if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0,()->emit("back",new JSONObject()));
+        getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){emit("back",new JSONObject());}});
     }
     static WebResourceResponse blocked(){return new WebResourceResponse("text/plain","UTF-8",403,"Forbidden",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
     static JSONObject object(String key,Object value){try{return new JSONObject().put(key,value);}catch(JSONException e){throw new IllegalStateException(e);}}
@@ -83,7 +85,7 @@ public final class MainActivity extends Activity {
             if(command.equals("appearance")){appearance(p);reply.ok(true);return;}
             if(command.equals("closeApp")){moveTaskToBack(true);reply.ok(true);return;}
             if(media.handles(command)){owner(p);media.handle(command,p,reply);return;}
-            if(command.equals("reminderPermission")){permission(android.Manifest.permission.POST_NOTIFICATIONS,()->reply.ok(true),()->reply.ok(false));return;}
+            if(command.equals("reminderPermission")){if(Build.VERSION.SDK_INT<33)reply.ok(true);else permission(android.Manifest.permission.POST_NOTIFICATIONS,()->reply.ok(true),()->reply.ok(false));return;}
             if(command.equals("exactAlarmSettings")){if(Build.VERSION.SDK_INT>=31)startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getPackageName())));reply.ok(true);return;}
             io.execute(()->{try{
                 switch(command){
@@ -135,7 +137,6 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);media.result(request,result,data);}
     @Override public void onConfigurationChanged(Configuration c){super.onConfigurationChanged(c);emit("configuration",new JSONObject());}
-    @Override public void onBackPressed(){emit("back",new JSONObject());}
     @Override protected void onStop(){media.background();super.onStop();}
     @Override protected void onDestroy(){media.close();io.shutdownNow();if(web!=null){web.stopLoading();web.destroy();web=null;}super.onDestroy();}
 }

@@ -8,7 +8,7 @@
   <uses-feature android:name="android.hardware.camera.any" android:required="false" />
   <uses-feature android:name="android.hardware.microphone" android:required="false" />
   <queries><intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent><intent><action android:name="android.intent.action.INSERT" /><data android:mimeType="vnd.android.cursor.dir/event" /></intent></queries>
-  <application android:label="${courseLabel}" android:icon="@drawable/launcher_icon" android:theme="@style/WhaleTheme" android:allowBackup="false" android:usesCleartextTraffic="false" android:supportsRtl="true" android:enableOnBackInvokedCallback="true">
+  <application android:label="${courseLabel}" android:icon="@drawable/launcher_icon" android:theme="@style/WhaleTheme" android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="false" android:supportsRtl="true" android:enableOnBackInvokedCallback="true">
     <activity android:name=".MainActivity" android:exported="true" android:resizeableActivity="true" android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden|uiMode" android:windowSoftInputMode="adjustResize">
       <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
     </activity>

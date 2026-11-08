@@ -1,12 +1,9 @@
 <resources>
-  <style name="WhaleTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+  <style name="WhaleBaseTheme" parent="android:style/Theme.Material.Light.NoActionBar">
     <item name="android:fontFamily">sans</item><item name="android:colorAccent">#3F65A2</item>
-    <item name="android:windowLightStatusBar">true</item><item name="android:windowLightNavigationBar">true</item>
+    <item name="android:windowLightStatusBar">true</item>
     <item name="android:windowActionModeOverlay">true</item><item name="android:windowBackground">#F5F7FC</item>
     <item name="android:windowNoTitle">true</item><item name="android:windowSoftInputMode">adjustResize</item>
   </style>
-  <style name="WhaleTimeDialog" parent="android:style/Theme.Material.Light.Dialog.Alert">
-    <item name="android:timePickerStyle">@style/WhaleTimePicker</item><item name="android:colorAccent">#3F65A2</item>
-  </style>
-  <style name="WhaleTimePicker" parent="android:style/Widget.Material.Light.TimePicker"><item name="android:timePickerMode">spinner</item></style>
+  <style name="WhaleTheme" parent="WhaleBaseTheme" />
 </resources>

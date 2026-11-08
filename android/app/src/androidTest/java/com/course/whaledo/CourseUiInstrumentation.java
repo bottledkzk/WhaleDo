@@ -26,15 +26,16 @@ public final class CourseUiInstrumentation extends Instrumentation {
         try{
             String target=getTargetContext().getPackageName();
             require(target.equals("com.course.whaledo.verification"),"Verification package required");
+            android.accessibilityservice.AccessibilityServiceInfo service=getUiAutomation().getServiceInfo();service.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;getUiAutomation().setServiceInfo(service);
             evidence=new File(getTargetContext().getExternalFilesDir(null),"evidence");
             if(!evidence.isDirectory()&&!evidence.mkdirs())throw new IOException("Cannot create test evidence");
-            Intent launch=new Intent().setClassName(target,MainActivity.class.getName()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Intent launch=new Intent().setClassName(target,MainActivity.class.getName()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             ActivityMonitor monitor=addMonitor(MainActivity.class.getName(),null,false);
             runOnMainSync(()->getTargetContext().startActivity(launch));
             activity=(MainActivity)monitor.waitForActivityWithTimeout(15000);removeMonitor(monitor);
             require(activity!=null,"Verification activity did not start");
             await("S.ready===true",60000);
-            if(arguments.getString("suite","ui").equals("speech"))speech();else ui();
+            String suite=arguments.getString("suite","ui");if(suite.equals("speech"))speech();else if(suite.equals("picker"))picker();else ui();
             result.putString("checks",checks.toString());
         }catch(Throwable error){code=Activity.RESULT_CANCELED;result.putString("failure",error.toString());}
         finally{
@@ -110,5 +111,22 @@ public final class CourseUiInstrumentation extends Instrumentation {
         speech.transcribe(sample,new MainActivity.Reply(){public void ok(Object value){text.set(value);done.countDown();}public void fail(String message,int status){error.set(message);done.countDown();}});
         require(done.await(90,TimeUnit.SECONDS),"Speech timeout");speech.close();require(error.get()==null,"Speech failed: "+error.get());require(text.get()!=null&&text.get().toString().contains("欢迎")&&text.get().toString().contains("语音"),"Unexpected speech transcript: "+text.get());
         check("official-sample-production-speech-adapter",new JSONObject().put("text",text.get()).put("elapsedMs",SystemClock.elapsedRealtime()-start));
+    }
+    private void picker() throws Exception {
+        Intent intent=NativeMedia.imageSelectionIntent(activity);
+        require(!Intent.ACTION_OPEN_DOCUMENT.equals(intent.getAction()),"Image picker must not use DocumentsUI");
+        check("image-selection-intent-is-gallery",new JSONObject().put("action",intent.getAction()).put("mime",intent.getType()));
+        js("S.panel='';S.tab=3;render(true);window.__pickerCancelled=false;native('photo').then(value=>window.__pickerCancelled=value===null);return true;");
+        AccessibilityNodeInfo root=null;boolean tabs=false;long until=SystemClock.elapsedRealtime()+12000;
+        while(SystemClock.elapsedRealtime()<until){root=getUiAutomation().getRootInActiveWindow();tabs=false;if(root!=null&&root.getPackageName()!=null&&!root.getPackageName().toString().equals(activity.getPackageName())){for(String label:new String[]{"Photos","Albums","照片","相册","选择照片"})tabs|=containsLabel(root,label,0);if(tabs)break;}Thread.sleep(150);}
+        require(root!=null&&root.getPackageName()!=null,"Gallery window did not appear");String name=root.getPackageName().toString();require(!name.contains("documentsui")&&!name.equals(activity.getPackageName()),"Document picker or application still visible");
+        require(tabs,"Photo/album controls missing");
+        check("native-photo-album-ui-opened",new JSONObject().put("package",name).put("photoAlbumControls",true));capture("photo-picker");
+        sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);await("window.__pickerCancelled===true",10000);check("photo-picker-cancel-returns-to-assistant",true);
+    }
+    private static boolean containsLabel(AccessibilityNodeInfo node,String label,int depth){
+        if(node==null||depth>48)return false;CharSequence text=node.getText(),description=node.getContentDescription();
+        if((text!=null&&text.toString().equalsIgnoreCase(label))||(description!=null&&description.toString().equalsIgnoreCase(label)))return true;
+        for(int i=0;i<node.getChildCount();i++)if(containsLabel(node.getChild(i),label,depth+1))return true;return false;
     }
 }
